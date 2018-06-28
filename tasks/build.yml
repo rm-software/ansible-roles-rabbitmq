@@ -1,6 +1,12 @@
 - name: ensure python-software-properties is installed
   apt: pkg=python-software-properties state=present
 
+# https://stackoverflow.com/questions/50939760/failed-to-deploy-the-latest-rabbitmq
+- name: RabbitMQ pin erlang version
+  copy:
+    src: "{{ role_path }}/files/erlang"
+    dest: /etc/apt/preferences.d/erlang
+
 - name: RabbitMQ apt repos
   apt_repository: repo='{{ item }}' state=present
   with_items:
@@ -12,7 +18,7 @@
   with_items:
     - https://dl.bintray.com/rabbitmq/Keys/rabbitmq-release-signing-key.asc
     - https://packages.erlang-solutions.com/ubuntu/erlang_solutions.asc
-    
+
 - name: RabbitMQ packages
   apt: name={{ item }} update_cache=yes state=present
   with_items: '{{ rabbitmq_packages }}'
@@ -25,7 +31,7 @@
     owner: 'rabbitmq'
     src: 'rabbitmq.config.j2'
   notify: Restart RabbitMQ
-  
+
 - name: RabbitMQ plugins
   rabbitmq_plugin: names='{{ rabbitmq_plugins|join(",") }}' state=enabled
   notify: Restart RabbitMQ
